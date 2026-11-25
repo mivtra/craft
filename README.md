@@ -1,10 +1,10 @@
-# Mivtra Craft — حِرفة ميفترا
+# Mivtra Craft — مهاراة ميفترا
 
 Arabic-first skills for building complete products with Claude: WPF desktop and web
 (PHP / ASP.NET Core), one design identity with RTL and light + dark themes, sound code and
 security rules, and Arabic social content.
 
-مهارات تبني مع Claude برامج عربية كاملة: سطح المكتب WPF والويب، هوية تصميم واحدة باتجاه من
+مهارات تبني مع Claude برامج عربية كاملة: سطح المكتب والويب، هوية تصميم واحدة باتجاه من
 اليمين وثيم فاتح وداكن، قواعد كود وأمان، ومحتوى عربي للتواصل الاجتماعي.
 
 ## Install — التثبيت
@@ -14,7 +14,7 @@ security rules, and Arabic social content.
 /plugin install mivtra-craft@mivtra
 ```
 
-## Free core — النواة المجانية (MIT)
+## Free core — النسخة المجانية (MIT)
 
 | Skill | Use |
 |---|---|

@@ -1,0 +1,20 @@
+{
+  "name": "mivtra-craft",
+  "version": "1.0.0",
+  "description": "Mivtra Craft (free core) — build Arabic-first desktop (WPF) and web products with one design identity (RTL, light + dark), sound code and security rules, and Arabic social content.",
+  "author": {
+    "name": "Mivtra",
+    "url": "https://mivtra.com"
+  },
+  "homepage": "https://mivtra.com/craft",
+  "license": "MIT",
+  "keywords": [
+    "arabic",
+    "rtl",
+    "wpf",
+    "php",
+    "aspnet",
+    "design-system",
+    "creative"
+  ]
+}

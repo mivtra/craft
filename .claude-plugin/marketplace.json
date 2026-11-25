@@ -1,0 +1,15 @@
+{
+  "name": "mivtra",
+  "description": "Mivtra Craft — Arabic-first skills for building complete products.",
+  "owner": {
+    "name": "Mivtra",
+    "url": "https://mivtra.com"
+  },
+  "plugins": [
+    {
+      "name": "mivtra-craft",
+      "source": "./plugins/mivtra-craft",
+      "description": "Mivtra Craft free core: code, design, studio."
+    }
+  ]
+}

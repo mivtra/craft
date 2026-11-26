@@ -17,9 +17,12 @@ Open **PowerShell** (not Claude) and run — افتح PowerShell وشغّل:
 irm https://raw.githubusercontent.com/mivtra/craft/main/install.ps1 | iex
 ```
 
-It installs or updates the plugin in Claude Code when present, and saves
-`mivtra-craft-<version>.zip` in Downloads for the Claude app. Run it again any time to update.
-يثبّت الإضافة أو يحدّثها في Claude Code إن وُجد، ويحفظ ملف الإضافة في مجلد التنزيلات لتطبيق Claude.
+It installs directly — nothing to upload: the `mivtra-craft` plugin in Claude Code (CLI, VS Code,
+JetBrains, or the Code tab of the Claude desktop app), or personal skills in `~/.claude/skills`
+when Claude Code is not found. Run the same command again to update.
+
+يثبّت مباشرة دون أي رفع يدوي: الإضافة داخل Claude Code (سطر الأوامر، أو VS Code، أو تبويب Code في
+تطبيق Claude)، أو مهارات شخصية في `~/.claude/skills` إن لم يجد Claude Code. أعد تشغيله للتحديث.
 
 Remove — الإزالة:
 
@@ -27,10 +30,14 @@ Remove — الإزالة:
 & ([scriptblock]::Create((irm https://raw.githubusercontent.com/mivtra/craft/main/install.ps1))) -Uninstall
 ```
 
-### Claude app (claude.ai / desktop) · تطبيق Claude
+### claude.ai chat · محادثة claude.ai
 
-Download **[mivtra-craft.zip](https://github.com/mivtra/craft/releases/latest/download/mivtra-craft.zip)**,
-then **Settings → Plugins → Upload**. حمّل الملف ثم الإعدادات ← الإضافات ← رفع.
+Chat skills live in your Claude account, and no command can add them there — this is the one
+manual step. Download **[mivtra-craft.zip](https://github.com/mivtra/craft/releases/latest/download/mivtra-craft.zip)**,
+then **Settings → Plugins → Upload**.
+
+مهارات المحادثة تُحفظ في حسابك، ولا يستطيع أي أمر إضافتها إليه؛ هذه الخطوة اليدوية الوحيدة.
+حمّل الملف ثم الإعدادات ← الإضافات ← رفع.
 
 ### Claude Code — inside Claude · داخل Claude Code
 

@@ -1,37 +1,44 @@
 <#
 .SYNOPSIS
-    Installs, updates or removes Mivtra Craft (free core) for Claude.
+    Installs, updates or removes Mivtra Craft for Claude - one command, nothing to upload.
 
 .DESCRIPTION
-    One command, safe to run again at any time:
       irm https://raw.githubusercontent.com/mivtra/craft/main/install.ps1 | iex
 
-    1. Downloads the latest release and checks it is a valid Claude plugin.
-    2. Claude Code found  -> adds the "mivtra" marketplace and installs or updates "mivtra-craft".
-    3. Always             -> saves mivtra-craft-<version>.zip in Downloads for the Claude app
-                             (claude.ai / desktop: Settings -> Plugins -> Upload).
+    - Claude Code found (CLI, VS Code, JetBrains, or the Code tab of the Claude desktop app):
+      installs the "mivtra-craft" plugin from the "mivtra" marketplace, or updates it.
+    - Claude Code not found: installs the skills as personal skills in ~/.claude/skills,
+      which Claude Code and the desktop Code tab load when they start.
+    Running it again updates. Nothing is uploaded by hand.
 
-    With options:
+    Options (pass them with the scriptblock form):
       & ([scriptblock]::Create((irm https://raw.githubusercontent.com/mivtra/craft/main/install.ps1))) -Uninstall
-    Options: -Uninstall  -ZipOnly  -NoOpen  -ZipPath <local zip, for testing>
+      -Uninstall   remove everything this script installed
+      -Skills      force personal-skills mode even when Claude Code is found
+      -Zip         also save mivtra-craft-<version>.zip in Downloads (for claude.ai chat upload)
+      -ZipPath     install from a local zip instead of the latest release (testing)
 
-    Works on Windows PowerShell 5.1 and PowerShell 7. Needs no administrator rights.
+    Windows PowerShell 5.1 or PowerShell 7. No administrator rights needed.
 #>
 [CmdletBinding()]
 param(
     [switch]$Uninstall,
-    [switch]$ZipOnly,
-    [switch]$NoOpen,
+    [switch]$Skills,
+    [switch]$Zip,
     [string]$ZipPath
 )
 
 $ErrorActionPreference = 'Stop'
-$ProgressPreference    = 'SilentlyContinue'   # Invoke-WebRequest is 10x slower with the progress bar
+$ProgressPreference    = 'SilentlyContinue'
 
 $Repo        = 'mivtra/craft'
 $Marketplace = 'mivtra'
 $Plugin      = 'mivtra-craft'
+$Prefix      = 'mivtra-craft-'
 $ReleaseZip  = "https://github.com/$Repo/releases/latest/download/mivtra-craft.zip"
+$ClaudeHome  = if ($env:CLAUDE_CONFIG_DIR) { $env:CLAUDE_CONFIG_DIR } else { Join-Path $env:USERPROFILE '.claude' }
+$SkillsDir   = Join-Path $ClaudeHome 'skills'
+$StateFile   = Join-Path $ClaudeHome 'mivtra-craft\install.json'
 
 function Write-Step([string]$Text) { Write-Host "  -> $Text" -ForegroundColor Cyan }
 function Write-Ok([string]$Text)   { Write-Host "  [OK] $Text" -ForegroundColor Green }
@@ -47,13 +54,10 @@ function Stop-Install([string]$Text, [string]$Fix) {
 function Find-ClaudeCli {
     $cmd = Get-Command claude -ErrorAction SilentlyContinue | Select-Object -First 1
     if ($cmd) { return $cmd.Source }
-    $candidates = @(
-        (Join-Path $env:USERPROFILE '.local\bin\claude.exe'),
-        (Join-Path $env:APPDATA 'npm\claude.cmd')
-    )
-    foreach ($c in $candidates) { if ($c -and (Test-Path $c)) { return $c } }
-    # Claude Code bundled with the Claude desktop app (newest version first)
-    $root = Join-Path $env:LOCALAPPDATA 'Claude-Data'
+    foreach ($c in @((Join-Path $env:USERPROFILE '.local\bin\claude.exe'), (Join-Path $env:APPDATA 'npm\claude.cmd'))) {
+        if ($c -and (Test-Path $c)) { return $c }
+    }
+    $root = Join-Path $env:LOCALAPPDATA 'Claude-Data'          # CLI bundled with the Claude desktop app
     if (Test-Path $root) {
         $exe = Get-ChildItem $root -Recurse -Filter claude.exe -ErrorAction SilentlyContinue |
             Where-Object { $_.FullName -match '\\claude-code\\' } |
@@ -75,40 +79,51 @@ function Get-ReleaseZip {
         Copy-Item $ZipPath $tmp
         return $tmp
     }
-    try {
-        [Net.ServicePointManager]::SecurityProtocol = [Net.ServicePointManager]::SecurityProtocol -bor [Net.SecurityProtocolType]::Tls12
-    } catch { }
-    try {
-        Invoke-WebRequest -Uri $ReleaseZip -OutFile $tmp -UseBasicParsing
-    } catch {
-        Stop-Install "Could not download the latest release ($($_.Exception.Message))." `
-            "Check the internet connection, or download it from https://github.com/$Repo/releases"
-    }
+    try { [Net.ServicePointManager]::SecurityProtocol = [Net.ServicePointManager]::SecurityProtocol -bor [Net.SecurityProtocolType]::Tls12 } catch { }
+    try { Invoke-WebRequest -Uri $ReleaseZip -OutFile $tmp -UseBasicParsing }
+    catch { Stop-Install "Could not download the latest release ($($_.Exception.Message))." "Check the internet connection, or see https://github.com/$Repo/releases" }
     return $tmp
 }
 
-function Read-PluginVersion([string]$Zip) {
+function Expand-Release([string]$Zip) {
+    $dir = Join-Path ([IO.Path]::GetTempPath()) ("mivtra-craft-" + [guid]::NewGuid().ToString('N'))
     Add-Type -AssemblyName System.IO.Compression.FileSystem
-    $archive = [IO.Compression.ZipFile]::OpenRead($Zip)
-    try {
-        $entry = $archive.Entries | Where-Object { $_.FullName -eq '.claude-plugin/plugin.json' } | Select-Object -First 1
-        if (-not $entry) { Stop-Install 'The download is not a valid Claude plugin (no .claude-plugin/plugin.json).' "Report it at https://github.com/$Repo/issues" }
-        $reader = New-Object IO.StreamReader($entry.Open(), [Text.Encoding]::UTF8)
-        try { $json = $reader.ReadToEnd() | ConvertFrom-Json } finally { $reader.Dispose() }
-        $skills = @($archive.Entries | Where-Object { $_.FullName -match '^skills/[^/]+/SKILL\.md$' }).Count
-        if ($json.name -ne $Plugin -or $skills -lt 1) { Stop-Install 'The download does not contain the Mivtra Craft skills.' "Report it at https://github.com/$Repo/issues" }
-        return [pscustomobject]@{ Version = $json.version; Skills = $skills }
-    } finally { $archive.Dispose() }
+    [IO.Compression.ZipFile]::ExtractToDirectory($Zip, $dir)
+    $manifest = Join-Path $dir '.claude-plugin\plugin.json'
+    if (-not (Test-Path $manifest)) { Stop-Install 'The download is not a valid Claude plugin (no .claude-plugin/plugin.json).' "Report it at https://github.com/$Repo/issues" }
+    $json = [IO.File]::ReadAllText($manifest, [Text.Encoding]::UTF8) | ConvertFrom-Json
+    $names = @(Get-ChildItem (Join-Path $dir 'skills') -Directory -ErrorAction SilentlyContinue |
+        Where-Object { Test-Path (Join-Path $_.FullName 'SKILL.md') } | ForEach-Object { $_.Name })
+    if ($json.name -ne $Plugin -or $names.Count -lt 1) { Stop-Install 'The download does not contain the Mivtra Craft skills.' "Report it at https://github.com/$Repo/issues" }
+    return [pscustomobject]@{ Dir = $dir; Version = $json.version; Skills = $names }
 }
 
-function Get-DownloadsFolder {
-    try {
-        $p = (New-Object -ComObject Shell.Application).NameSpace('shell:Downloads').Self.Path
-        if ($p -and (Test-Path $p)) { return $p }
-    } catch { }
-    $p = Join-Path $env:USERPROFILE 'Downloads'
-    if (-not (Test-Path $p)) { New-Item -ItemType Directory $p | Out-Null }
-    return $p
+function Save-State($Mode, $Version, $Names) {
+    New-Item -ItemType Directory -Force (Split-Path $StateFile) | Out-Null
+    $state = [pscustomobject]@{ mode = $Mode; version = $Version; skills = $Names; installed = (Get-Date).ToString('s') }
+    [IO.File]::WriteAllText($StateFile, ($state | ConvertTo-Json), (New-Object Text.UTF8Encoding($false)))
+}
+
+function Remove-PersonalSkills {
+    $removed = 0
+    if (Test-Path $SkillsDir) {
+        Get-ChildItem $SkillsDir -Directory -Filter "$Prefix*" | ForEach-Object { Remove-Item $_.FullName -Recurse -Force; $removed++ }
+    }
+    return $removed
+}
+
+function Install-PersonalSkills($Release) {
+    New-Item -ItemType Directory -Force $SkillsDir | Out-Null
+    [void](Remove-PersonalSkills)                           # clean update: no stale files
+    $utf8 = New-Object Text.UTF8Encoding($false)
+    foreach ($name in $Release.Skills) {
+        $dest = Join-Path $SkillsDir ($Prefix + $name)
+        Copy-Item (Join-Path $Release.Dir "skills\$name") $dest -Recurse
+        $md = Join-Path $dest 'SKILL.md'
+        $text = [IO.File]::ReadAllText($md, [Text.Encoding]::UTF8)
+        $text = [regex]::Replace($text, '(?m)^name:\s*"?[^"\r\n]+"?', "name: `"$Prefix$name`"", 1)
+        [IO.File]::WriteAllText($md, $text, $utf8)
+    }
 }
 
 # ---------------------------------------------------------------------------------------------
@@ -117,73 +132,73 @@ Write-Host "  Mivtra Craft - Arabic-first skills for Claude" -ForegroundColor Wh
 Write-Host "  https://github.com/$Repo" -ForegroundColor DarkGray
 Write-Host ""
 
-$cli = $null
-if (-not $ZipOnly) { $cli = Find-ClaudeCli }
+$cli = Find-ClaudeCli
 
 if ($Uninstall) {
-    if (-not $cli) { Stop-Install 'Claude Code was not found, so there is nothing to remove here.' 'In the Claude app: Settings -> Plugins -> mivtra-craft -> Remove.' }
-    Write-Step "Removing $Plugin from Claude Code"
-    $r = Invoke-Claude $cli @('plugin', 'uninstall', "$Plugin@$Marketplace")
-    if ($r.Code -eq 0) { Write-Ok 'Plugin removed' } else { Write-Warn "Plugin was not installed ($($r.Text))" }
-    $r = Invoke-Claude $cli @('plugin', 'marketplace', 'remove', $Marketplace)
-    if ($r.Code -eq 0) { Write-Ok 'Marketplace removed' } else { Write-Warn "Marketplace was not added ($($r.Text))" }
+    if ($cli) {
+        $r = Invoke-Claude $cli @('plugin', 'uninstall', "$Plugin@$Marketplace")
+        if ($r.Code -eq 0) { Write-Ok 'Plugin removed from Claude Code' }
+        $r = Invoke-Claude $cli @('plugin', 'marketplace', 'remove', $Marketplace)
+        if ($r.Code -eq 0) { Write-Ok "Marketplace '$Marketplace' removed" }
+    }
+    $n = Remove-PersonalSkills
+    if ($n -gt 0) { Write-Ok "$n personal skills removed from $SkillsDir" }
+    if (Test-Path $StateFile) { Remove-Item $StateFile -Force }
     Write-Host ""
-    Write-Host '  In the Claude app, remove it from Settings -> Plugins as well.' -ForegroundColor DarkGray
+    Write-Host '  Done. Your brand file (~/.claude/mivtra-craft/brand.md) was kept.' -ForegroundColor DarkGray
     Write-Host ""
     return
 }
 
 Write-Step 'Downloading the latest release'
-$zip  = Get-ReleaseZip
-$info = Read-PluginVersion $zip
-Write-Ok "Mivtra Craft $($info.Version) - $($info.Skills) skills, valid plugin"
+$zipFile = Get-ReleaseZip
+$release = Expand-Release $zipFile
+Write-Ok "Mivtra Craft $($release.Version) - skills: $($release.Skills -join ', ')"
 
-# 1. Claude Code (CLI, VS Code, JetBrains, desktop Code tab)
-if ($cli) {
-    Write-Step "Claude Code found: $cli"
+if ($cli -and -not $Skills) {
+    Write-Step 'Installing into Claude Code'
     $list = Invoke-Claude $cli @('plugin', 'marketplace', 'list')
     if ($list.Text -match "(?m)\b$Marketplace\b") {
         $r = Invoke-Claude $cli @('plugin', 'marketplace', 'update', $Marketplace)
-        if ($r.Code -ne 0) { Stop-Install "Could not update the '$Marketplace' marketplace: $($r.Text)" }
-        Write-Ok "Marketplace '$Marketplace' updated"
     } else {
         $r = Invoke-Claude $cli @('plugin', 'marketplace', 'add', $Repo)
-        if ($r.Code -ne 0) { Stop-Install "Could not add the '$Marketplace' marketplace: $($r.Text)" 'Check that github.com is reachable, then run the command again.' }
-        Write-Ok "Marketplace '$Marketplace' added"
     }
-    $plugins = Invoke-Claude $cli @('plugin', 'list')
-    if ($plugins.Text -match [regex]::Escape("$Plugin@$Marketplace")) {
-        $r = Invoke-Claude $cli @('plugin', 'update', "$Plugin@$Marketplace")
-        if ($r.Code -ne 0) { Stop-Install "Could not update $($Plugin): $($r.Text)" }
-        Write-Ok "$Plugin updated to the latest version"
-    } else {
-        $r = Invoke-Claude $cli @('plugin', 'install', "$Plugin@$Marketplace")
-        if ($r.Code -ne 0) { Stop-Install "Could not install $($Plugin): $($r.Text)" }
-        Write-Ok "$Plugin installed in Claude Code"
-    }
-} elseif (-not $ZipOnly) {
-    Write-Warn 'Claude Code not found - skipped (only needed for Claude Code).'
+    if ($r.Code -ne 0) { Stop-Install "Could not reach the '$Marketplace' marketplace: $($r.Text)" 'Check that github.com is reachable, then run the command again.' }
+
+    $installed = (Invoke-Claude $cli @('plugin', 'list')).Text -match [regex]::Escape("$Plugin@$Marketplace")
+    if ($installed) { $r = Invoke-Claude $cli @('plugin', 'update', "$Plugin@$Marketplace") }
+    else            { $r = Invoke-Claude $cli @('plugin', 'install', "$Plugin@$Marketplace") }
+    if ($r.Code -ne 0) { Stop-Install "Claude Code refused the plugin: $($r.Text)" }
+
+    $check = (Invoke-Claude $cli @('plugin', 'list')).Text
+    if ($check -notmatch [regex]::Escape("$Plugin@$Marketplace")) { Stop-Install 'The plugin does not appear in Claude Code after installing.' 'Run the command again; if it persists, open an issue on GitHub.' }
+    $n = Remove-PersonalSkills                               # never two copies of the same skills
+    if ($n -gt 0) { Write-Ok "Removed $n older personal-skill copies" }
+    Save-State 'plugin' $release.Version $release.Skills
+    $verb = if ($installed) { 'updated' } else { 'installed' }
+    Write-Ok "Plugin $Plugin $verb in Claude Code"
+    $how = ($release.Skills | ForEach-Object { "/${Plugin}:$_" }) -join '  '
+} else {
+    if (-not $cli) { Write-Warn 'Claude Code CLI not found - installing as personal skills.' }
+    Write-Step "Installing personal skills into $SkillsDir"
+    Install-PersonalSkills $release
+    Save-State 'skills' $release.Version $release.Skills
+    Write-Ok "$($release.Skills.Count) skills installed"
+    $how = ($release.Skills | ForEach-Object { "/$Prefix$_" }) -join '  '
 }
 
-# 2. Claude app (claude.ai / desktop chat): plugins are uploaded from Settings
-$downloads = Get-DownloadsFolder
-$target = Join-Path $downloads "mivtra-craft-$($info.Version).zip"
-Copy-Item $zip $target -Force
-Remove-Item $zip -Force -ErrorAction SilentlyContinue
-Write-Ok "Saved for the Claude app: $target"
+if ($Zip) {
+    $downloads = Join-Path $env:USERPROFILE 'Downloads'
+    $target = Join-Path $downloads "mivtra-craft-$($release.Version).zip"
+    Copy-Item $zipFile $target -Force
+    Write-Ok "Zip for claude.ai chat saved: $target"
+}
+Remove-Item $zipFile -Force -ErrorAction SilentlyContinue
+Remove-Item $release.Dir -Recurse -Force -ErrorAction SilentlyContinue
 
 Write-Host ""
-Write-Host '  Next, in the Claude app (claude.ai or desktop):' -ForegroundColor White
-Write-Host '    Settings -> Plugins -> Upload -> choose the zip above.'
-Write-Host '    Already installed? Plugins -> mivtra-craft -> ... -> Upload new version.'
-if ($cli) {
-    Write-Host '  Claude Code: restart it, then the skills appear as mivtra-craft:code, :design, :studio.'
-}
+Write-Host "  Ready. Start a new Claude Code session; the skills load by themselves." -ForegroundColor White
+Write-Host "  Call one directly: $how" -ForegroundColor DarkGray
+Write-Host '  First use: Claude asks for your brand once (saved in ~/.claude/mivtra-craft/brand.md).' -ForegroundColor DarkGray
+Write-Host '  Update: run the same command again.   Remove: add -Uninstall (see README).' -ForegroundColor DarkGray
 Write-Host ""
-Write-Host '  First use: Claude asks for your brand once and saves it in' -ForegroundColor DarkGray
-Write-Host '  ~/.claude/mivtra-craft/brand.md.' -ForegroundColor DarkGray
-Write-Host ""
-
-if (-not $NoOpen) {
-    try { Start-Process explorer.exe "/select,`"$target`"" } catch { }
-}

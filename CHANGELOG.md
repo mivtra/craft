@@ -1,5 +1,14 @@
 # Changelog — Mivtra Craft
 
+## 1.0.5
+
+- `studio`: mandatory safe margin in every frame and format — only the background photo is
+  full-bleed; text, cards, screenshots, chips and logo stay at least 90 px from the sides at
+  1080 wide (80 px on still images), measured at the extreme of every animation, and checked
+  with `getBoundingClientRect()` on test frames before the full render.
+- `studio`: the voiceover starts 0.6 s after the video (was 0.15 s) — the first word is no longer
+  lost to the platform's audio start, and the opening title is fully on screen before it is spoken.
+
 ## 1.0.4
 
 - `design` [DS-16] #10: numbers never break across lines — amounts with currency, phones,

@@ -84,9 +84,9 @@ These two are typed in Claude Code, not in PowerShell. هذان الأمران �
 
 Adds `product` (plan and project memory, About + licensing, backups, demo data, login and
 roles, installer, signed updates, printing, packaging), `audit`, `api`, `tests`, `office` and
-`it`. Details: https://mivtra.com/craft
+`it`. **[Get Mivtra Craft Pro — $39](https://mivtra.gumroad.com/l/mivtra-craft-pro)** · launch code `LAUNCH30` (30% off, first 50 buyers).
 
-تضيف طبقة المنتج كاملة والتحديثات الموقّعة والطباعة والفحص والاختبارات وملفات الأوفيس.
+تضيف طبقة المنتج كاملة والتحديثات الموقّعة والطباعة والفحص والاختبارات وملفات الأوفيس. **[اشترِ الحزمة الكاملة](https://mivtra.gumroad.com/l/mivtra-craft-pro)** · كود الإطلاق `LAUNCH30` خصم 30% لأول 50 مشترياً.
 
 ## First step — أول خطوة
 

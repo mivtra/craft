@@ -39,7 +39,10 @@ brand color if the owner asks for one.
 ```
 
 Shadows: `sm` and `md`, plus `--shadow-lg` for hover lift and dialogs when motion is on. Cairo is self-hosted as three `unicode-range` woff2 subsets (Arabic, Latin-ext,
-Latin), weight axis 400–900, `font-display: swap`, preloaded — never a CDN.
+Latin), weight axis 400–900, `font-display: swap`, preloaded — never a CDN. Each `src` lists
+`local("Cairo")` first, then the bundled file, and the font files are copied into the product
+(`assets/fonts/`) in the same change; the stack ends `"Segoe UI", Tahoma, sans-serif`. A page
+whose font files are missing still renders in Cairo when it is installed — never in the browser default.
 
 Motion and edge tokens (from `kit-web`, same in both themes except the edge):
 

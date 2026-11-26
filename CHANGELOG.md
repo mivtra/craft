@@ -1,5 +1,12 @@
 # Changelog — Mivtra Craft
 
+## 1.0.4
+
+- `design` [DS-16] #10: numbers never break across lines — amounts with currency, phones,
+  dates and codes are one unbreakable unit (found on the test page: `+966` split from its number).
+- `design` web fonts: `local("Cairo")` first, font files shipped with the product, a safe fallback
+  stack — a page never falls back to the browser default font.
+
 ## 1.0.3
 
 - `studio`: the pre-production interview asks only what the brief is missing (platform, details,

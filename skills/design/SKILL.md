@@ -250,6 +250,10 @@ Centered card, max 420, padding 24, dialog radius, `--shadow-md`.
 9. **Numbers read like a receipt**: the currency or unit comes **after**
    the number (`1,250 ر.س`, `12 م`), decimals appear only when the value has them (`1,250` not
    `1,250.00`; `12.5` stays), one number formatter for screen, export and print.
+10. **A number never breaks across lines**: amounts with their currency, phone numbers, dates,
+   codes and IDs are one unbreakable unit (`white-space: nowrap`, the phone/code isolated LTR
+   with `<bdi dir="ltr">` / WPF `TextWrapping="NoWrap"`). A column that cannot fit them gets
+   width from a narrower text column, never from wrapping the number.
 
 ## [DS-17] In-window dialogs — no popup windows
 

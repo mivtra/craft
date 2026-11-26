@@ -7,6 +7,30 @@ security rules, and Arabic social content.
 مهارات تبني مع Claude برامج عربية كاملة: سطح المكتب والويب، هوية تصميم واحدة باتجاه من
 اليمين وثيم فاتح وداكن، قواعد كود وأمان، ومحتوى عربي للتواصل الاجتماعي.
 
+![Same request, same model — with Mivtra Craft vs without](assets/before-after.png)
+
+![Results: with vs without](assets/results.png)
+
+Tested, not promised: every skill ran on real requests with and without it, scored against checks
+written before the run. اختبرنا كل مهارة بطلبات حقيقية بها وبدونها، بمعايير كُتبت قبل التشغيل.
+
+## Try it in two minutes — جرّبها في دقيقتين
+
+After installing, paste one of these into Claude — بعد التثبيت الصق أحدها في Claude:
+
+```text
+صمم صفحة HTML و CSS واحدة لقائمة العملاء في نظام عربي (جدول، بحث، زر إضافة).
+```
+
+```text
+منشور انستغرام لافتتاح مقهى «ركن الهيل» في الملقا بالرياض يوم الخميس. الجمهور: شباب وعائلات.
+اللهجة: نجدية بيضاء. العرض: قهوة مجانية لأول 100 زائر. أريد النص وفكرة التصميم.
+```
+
+```text
+أنشئ صفحة تسجيل دخول لتطبيق ويب PHP 8 بدون إطار عمل، مع MySQL عبر PDO. الدخول باسم المستخدم أو البريد.
+```
+
 ## Install — التثبيت
 
 ### Windows — one command · أمر واحد

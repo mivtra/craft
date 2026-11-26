@@ -1,5 +1,15 @@
 # Changelog — Mivtra Craft
 
+## 1.0.3
+
+- `studio`: the pre-production interview asks only what the brief is missing (platform, details,
+  audience, dialect, output, visuals), at most five questions, each as choices with the
+  recommended one first — answer with codes like «2أ 3ب».
+- `design`: every form validates in place — required marks, the message under its field,
+  focus on the first invalid field, no message boxes.
+- Both found by a with/without test of all three skills and re-tested after the fix.
+- Repository: SECURITY.md and issue templates.
+
 ## 1.0.2
 
 - `install.ps1` installs directly, with nothing to upload by hand: the plugin in Claude Code

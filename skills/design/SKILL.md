@@ -102,6 +102,10 @@ law:** a fixed height holding text ≥ `1.874 × font size` + borders.
 Contracts: `web.md` (classes), `wpf.md` (style keys). Both: rounded controls; hover, focus,
 pressed, disabled from tokens; neutral buttons have a clearly visible edge; icon + field +
 trailing action inside one frame; **every password field has the eye toggle**.
+**Every form validates in place**: a required mark on required fields, the message directly
+under its field in the danger color (from resources [UI-31]), the field's edge in danger, focus
+moved to the first invalid field, and the primary button stays enabled so the check can run.
+No message boxes for validation.
 
 ## [DS-6] Motion — soft, visible, never in the way
 

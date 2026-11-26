@@ -1,0 +1,39 @@
+name: Bug report · بلاغ عن خطأ
+description: Something in Mivtra Craft does not work as described · شيء لا يعمل كما هو موصوف
+labels: [bug]
+body:
+  - type: dropdown
+    id: where
+    attributes:
+      label: Where · أين
+      options:
+        - Installer (install.ps1)
+        - Skill code
+        - Skill design
+        - Skill studio
+        - Claude app upload
+        - Other
+    validations:
+      required: true
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened · ماذا حدث
+      description: The request you gave Claude, what you expected, and what you got · الطلب، والمتوقع، والنتيجة
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: Version · الإصدار
+      placeholder: "1.0.2"
+  - type: input
+    id: client
+    attributes:
+      label: Claude client · بيئة Claude
+      placeholder: "Claude Code CLI / VS Code / Claude desktop / claude.ai"
+  - type: textarea
+    id: output
+    attributes:
+      label: Installer output or error text · نص الخطأ
+      render: text

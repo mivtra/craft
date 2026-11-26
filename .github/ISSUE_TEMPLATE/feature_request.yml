@@ -1,0 +1,14 @@
+name: Idea · اقتراح
+description: A rule, screen pattern or skill you would like · قاعدة أو نمط أو مهارة تقترحها
+labels: [enhancement]
+body:
+  - type: textarea
+    id: idea
+    attributes:
+      label: The idea · الفكرة
+    validations:
+      required: true
+  - type: textarea
+    id: why
+    attributes:
+      label: Why it matters · لماذا تهم

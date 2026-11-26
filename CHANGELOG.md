@@ -1,5 +1,14 @@
 # Changelog — Mivtra Craft
 
+## 1.0.1
+
+- The plugin now sits at the repository root, so GitHub's "Download ZIP" and the release zip
+  both upload to the Claude app (the 1.0.0 layout failed with "plugin.json must be at
+  .claude-plugin/plugin.json").
+- `install.ps1`: one PowerShell command installs or updates the plugin in Claude Code and saves
+  the zip for the Claude app; `-Uninstall` removes it.
+- Each release carries `mivtra-craft.zip`.
+
 ## 1.0.0
 
 First public release: one plugin, `mivtra-craft`, nine skills.

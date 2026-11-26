@@ -9,10 +9,37 @@ security rules, and Arabic social content.
 
 ## Install — التثبيت
 
+### Windows — one command · أمر واحد
+
+Open **PowerShell** (not Claude) and run — افتح PowerShell وشغّل:
+
+```powershell
+irm https://raw.githubusercontent.com/mivtra/craft/main/install.ps1 | iex
+```
+
+It installs or updates the plugin in Claude Code when present, and saves
+`mivtra-craft-<version>.zip` in Downloads for the Claude app. Run it again any time to update.
+يثبّت الإضافة أو يحدّثها في Claude Code إن وُجد، ويحفظ ملف الإضافة في مجلد التنزيلات لتطبيق Claude.
+
+Remove — الإزالة:
+
+```powershell
+& ([scriptblock]::Create((irm https://raw.githubusercontent.com/mivtra/craft/main/install.ps1))) -Uninstall
+```
+
+### Claude app (claude.ai / desktop) · تطبيق Claude
+
+Download **[mivtra-craft.zip](https://github.com/mivtra/craft/releases/latest/download/mivtra-craft.zip)**,
+then **Settings → Plugins → Upload**. حمّل الملف ثم الإعدادات ← الإضافات ← رفع.
+
+### Claude Code — inside Claude · داخل Claude Code
+
 ```
 /plugin marketplace add mivtra/craft
 /plugin install mivtra-craft@mivtra
 ```
+
+These two are typed in Claude Code, not in PowerShell. هذان الأمران يُكتبان داخل Claude Code لا في PowerShell.
 
 ## Free core — النسخة المجانية (MIT)
 

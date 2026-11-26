@@ -8,7 +8,7 @@
   "plugins": [
     {
       "name": "mivtra-craft",
-      "source": "./plugins/mivtra-craft",
+      "source": "./",
       "description": "Mivtra Craft free core: code, design, studio."
     }
   ]
